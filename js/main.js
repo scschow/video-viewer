@@ -1,6 +1,7 @@
 import { Player, SPEEDS } from './player.js';
 import { SyncEngine } from './sync.js';
 import { clamp } from './utils.js';
+import { APP_VERSION } from './version.js';
 
 // ---------------- players ----------------
 
@@ -226,6 +227,17 @@ document.addEventListener('keydown', (e) => {
 
 const helpDialog = document.getElementById('help-dialog');
 document.getElementById('help-btn').addEventListener('click', () => helpDialog.showModal());
+document.getElementById('app-version').textContent = `v${APP_VERSION}`;
+
+// Install tips only make sense in a mobile browser — hide them in the
+// installed (Home Screen / standalone) app.
+const isInstalled =
+  window.matchMedia('(display-mode: standalone)').matches ||
+  window.matchMedia('(display-mode: fullscreen)').matches ||
+  window.navigator.standalone === true;
+if (coarseMq.matches && !isInstalled) {
+  for (const tip of document.querySelectorAll('.install-tip')) tip.hidden = false;
+}
 
 // ---------------- debug/test hooks ----------------
 
