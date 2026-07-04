@@ -92,12 +92,8 @@ body {
   gap: 14px;
 }
 
-/* Portrait screens: stack landscape videos vertically…
-   …unless both videos are portrait, where side-by-side is the bigger layout
-   (JS adds .side-by-side when it knows the video shapes). */
-@media (orientation: portrait) {
-  .compare-grid:not(.side-by-side) { grid-template-columns: 1fr; }
-}
+/* Comparison is always side by side — stacked videos are impractical to
+   compare. On portrait phones the app asks for landscape instead (main.js). */
 
 /* ---------- Player card ---------- */
 
@@ -346,6 +342,36 @@ body {
 .sync-timeline { flex: 1; }
 .chk-label { font-size: 13px; color: var(--text-dim); display: inline-flex; align-items: center; gap: 6px; }
 .sync-status { font-size: 12px; color: var(--text-dim); margin-left: auto; font-variant-numeric: tabular-nums; }
+
+/* ---------- Rotate prompt (compare mode on portrait phones) ---------- */
+
+#rotate-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(10, 12, 18, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.rotate-card {
+  text-align: center;
+  max-width: 320px;
+  color: var(--text);
+}
+.rotate-card h2 { font-size: 18px; margin: 14px 0 8px; }
+.rotate-card p { font-size: 13px; color: var(--text-dim); line-height: 1.5; margin: 0 0 18px; }
+.rotate-icon {
+  font-size: 56px;
+  display: inline-block;
+  animation: rotate-hint 2s ease-in-out infinite;
+}
+@keyframes rotate-hint {
+  0%, 20% { transform: rotate(0deg); }
+  50%, 70% { transform: rotate(-90deg); }
+  100% { transform: rotate(0deg); }
+}
 
 /* ---------- Help dialog ---------- */
 

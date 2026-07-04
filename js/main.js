@@ -40,21 +40,60 @@ function setMode(next) {
   modeSingleBtn.classList.toggle('active', next === 'single');
   modeCompareBtn.classList.toggle('active', next === 'compare');
   setActivePlayer(next === 'single' ? singlePlayer : playerA);
+  if (next === 'compare') enforceLandscape();
+  else releaseLandscape();
 }
 
 modeSingleBtn.addEventListener('click', () => setMode('single'));
 modeCompareBtn.addEventListener('click', () => setMode('compare'));
 
-// On portrait screens the compare grid stacks by default, but if both loaded
-// videos are portrait clips, side-by-side gives each one more pixels.
-const compareGrid = document.querySelector('.compare-grid');
-function updateCompareLayout() {
-  const bothPortrait =
-    playerA.loaded && playerB.loaded && playerA.aspect < 1 && playerB.aspect < 1;
-  compareGrid.classList.toggle('side-by-side', bothPortrait);
+// ---------------- landscape enforcement (compare mode on phones) ----------------
+// Side-by-side comparison needs a landscape screen. Where the browser allows
+// it (Android, fullscreen) we lock the orientation; elsewhere (iOS) we show a
+// "rotate your phone" prompt until the device is turned.
+
+const portraitMq = window.matchMedia('(orientation: portrait)');
+const coarseMq = window.matchMedia('(pointer: coarse)');
+const rotateOverlay = document.getElementById('rotate-overlay');
+let rotateDismissed = false;
+let lockedByApp = false;
+
+let forceTouchForTesting = false;
+
+function needsLandscapePrompt() {
+  return mode === 'compare' && (coarseMq.matches || forceTouchForTesting) && portraitMq.matches;
 }
-playerA.on('loaded', updateCompareLayout);
-playerB.on('loaded', updateCompareLayout);
+
+function updateRotateOverlay() {
+  rotateOverlay.hidden = !(needsLandscapePrompt() && !rotateDismissed);
+}
+
+async function enforceLandscape() {
+  if (!needsLandscapePrompt()) return;
+  try {
+    // Orientation lock requires fullscreen; both must come from a user gesture.
+    await document.documentElement.requestFullscreen({ navigationUI: 'hide' });
+    await screen.orientation.lock('landscape');
+    lockedByApp = true;
+  } catch {
+    updateRotateOverlay(); // browser won't let us force it — ask the user
+  }
+}
+
+function releaseLandscape() {
+  rotateDismissed = false;
+  rotateOverlay.hidden = true;
+  if (!lockedByApp) return;
+  lockedByApp = false;
+  try { screen.orientation.unlock(); } catch { /* not supported */ }
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+}
+
+portraitMq.addEventListener('change', updateRotateOverlay);
+rotateOverlay.querySelector('.rotate-dismiss').addEventListener('click', () => {
+  rotateDismissed = true;
+  updateRotateOverlay();
+});
 
 // ---------------- sync bar ----------------
 
@@ -190,4 +229,7 @@ document.getElementById('help-btn').addEventListener('click', () => helpDialog.s
 
 // ---------------- debug/test hooks ----------------
 
-window.__frameview = { singlePlayer, playerA, playerB, sync, setMode, clamp };
+window.__frameview = {
+  singlePlayer, playerA, playerB, sync, setMode, clamp,
+  simulateTouch(on) { forceTouchForTesting = on; updateRotateOverlay(); },
+};
