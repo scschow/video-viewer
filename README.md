@@ -51,6 +51,19 @@ python3 -m http.server 8000
   master scrub bar. Playback keeps the two videos locked with automatic drift
   correction.
 
+## Using it on a phone
+
+The hosted app (GitHub Pages) works in the mobile browser, but browsers keep
+their own toolbars on screen. For a true fullscreen experience, install it:
+
+- **iPhone/iPad**: open the site in Safari → Share → **Add to Home Screen**.
+  Launching from the icon runs FrameView fullscreen with no browser UI.
+- **Android**: Chrome menu → **Add to Home screen** (or the install prompt).
+
+Compare mode is always side by side. On a portrait phone the app locks to
+landscape where the browser allows it (Android fullscreen); on iOS it prompts
+you to rotate the device.
+
 ## Video format support
 
 The app plays anything your browser can decode:
