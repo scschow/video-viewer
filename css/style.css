@@ -27,7 +27,13 @@ html, body {
   height: 100%;
 }
 
-body { display: flex; flex-direction: column; min-height: 100vh; }
+body {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh; /* mobile browsers: track the real visible viewport */
+  overflow: hidden;
+}
 
 /* ---------- Header ---------- */
 
@@ -72,22 +78,32 @@ body { display: flex; flex-direction: column; min-height: 100vh; }
 
 /* ---------- Views ---------- */
 
-.view { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
-#single-view { align-items: center; }
-#single-view .player-slot { width: min(1100px, 100%); }
+.view { flex: 1; min-height: 0; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+
+.player-slot { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+#single-view .player-slot { flex: 1; }
 
 .compare-grid {
+  flex: 1;
+  min-height: 0;
   display: grid;
   grid-template-columns: 1fr 1fr;
+  grid-auto-rows: 1fr;
   gap: 14px;
 }
-@media (max-width: 900px) {
-  .compare-grid { grid-template-columns: 1fr; }
+
+/* Portrait screens: stack landscape videos vertically…
+   …unless both videos are portrait, where side-by-side is the bigger layout
+   (JS adds .side-by-side when it knows the video shapes). */
+@media (orientation: portrait) {
+  .compare-grid:not(.side-by-side) { grid-template-columns: 1fr; }
 }
 
 /* ---------- Player card ---------- */
 
 .player-card {
+  flex: 1;
+  min-height: 0;
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -119,7 +135,9 @@ body { display: flex; flex-direction: column; min-height: 100vh; }
   background: #000;
   border-radius: 6px;
   overflow: hidden;
-  aspect-ratio: 16 / 9;
+  /* Absorb all height the controls don't need; the video letterboxes inside. */
+  flex: 1;
+  min-height: 140px;
   touch-action: none;
 }
 .video-shell video {
@@ -313,6 +331,7 @@ body { display: flex; flex-direction: column; min-height: 100vh; }
 /* ---------- Sync bar ---------- */
 
 .sync-bar {
+  flex-shrink: 0;
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -350,3 +369,36 @@ body { display: flex; flex-direction: column; min-height: 100vh; }
   font-size: 12px;
 }
 .help-note { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+
+/* ---------- Responsive / touch ---------- */
+
+/* Compact chrome on small screens so the video gets the space. */
+@media (max-width: 700px), (max-height: 700px) {
+  .view { padding: 8px; gap: 8px; }
+  .player-card { padding: 8px; gap: 8px; }
+  .compare-grid { gap: 8px; }
+  .app-header { padding: 6px 12px; gap: 12px; }
+  .brand h1 { font-size: 15px; }
+  .sync-bar { padding: 8px; gap: 8px; }
+  .sync-row { gap: 8px; }
+  .readout { font-size: 11px; }
+  .mute-label { display: none; } /* videos default to muted anyway */
+}
+
+/* Bigger touch targets on touch devices. */
+@media (pointer: coarse) {
+  .ctl-btn { min-width: 42px; height: 40px; }
+  .seg-btn { height: 40px; padding: 0 14px; }
+  .timeline { height: 32px; }
+  .mode-btn { padding: 10px 18px; }
+}
+
+/* Very short screens (landscape phones): a flexible video shell would squeeze
+   the controls into overflow. Give the video a fixed share of the height and
+   let the view scroll instead. */
+@media (max-height: 480px) {
+  .view { overflow-y: auto; }
+  #single-view .player-slot { flex: none; }
+  .compare-grid { flex: none; }
+  .video-shell { flex: none; height: 52vh; min-height: 130px; }
+}

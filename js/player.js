@@ -280,6 +280,11 @@ export class Player {
   // ---------------- frame math & transport ----------------
 
   get duration() { return this._duration; }
+  /** Width/height ratio of the loaded video; < 1 means portrait. */
+  get aspect() {
+    const v = this.el.video;
+    return v.videoWidth && v.videoHeight ? v.videoWidth / v.videoHeight : 16 / 9;
+  }
   get totalFrames() { return Math.max(1, Math.round(this.duration * this.fps)); }
   get currentFrame() { return clamp(Math.floor(this.el.video.currentTime * this.fps + 1e-4), 0, this.totalFrames - 1); }
   get playing() { return !this.el.video.paused && !this.el.video.ended; }

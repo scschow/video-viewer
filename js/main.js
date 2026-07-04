@@ -45,6 +45,17 @@ function setMode(next) {
 modeSingleBtn.addEventListener('click', () => setMode('single'));
 modeCompareBtn.addEventListener('click', () => setMode('compare'));
 
+// On portrait screens the compare grid stacks by default, but if both loaded
+// videos are portrait clips, side-by-side gives each one more pixels.
+const compareGrid = document.querySelector('.compare-grid');
+function updateCompareLayout() {
+  const bothPortrait =
+    playerA.loaded && playerB.loaded && playerA.aspect < 1 && playerB.aspect < 1;
+  compareGrid.classList.toggle('side-by-side', bothPortrait);
+}
+playerA.on('loaded', updateCompareLayout);
+playerB.on('loaded', updateCompareLayout);
+
 // ---------------- sync bar ----------------
 
 const syncPlayBtn = document.getElementById('sync-play');
