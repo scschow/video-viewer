@@ -1,6 +1,7 @@
 import {
   clamp, formatTime, detectFps, snapFps,
   videoKey, loadVideoMeta, saveVideoMeta,
+  axisDelta, axisFraction,
 } from './utils.js';
 
 export const SPEEDS = [1, 0.5, 0.25, 0.125];
@@ -452,15 +453,15 @@ export class Player {
   _bindScrub() {
     const { scrubLayer, timeline, scrubBadge } = this.el;
 
-    // Drag anywhere on the video: horizontal pixels map to frames.
-    let dragStartX = 0;
+    // Drag anywhere on the video: pixels along the UI's horizontal axis map to frames.
+    let dragStart = { x: 0, y: 0 };
     let dragStartFrame = 0;
     let dragging = false;
 
     scrubLayer.addEventListener('pointerdown', (e) => {
       if (!this.loaded) return;
       dragging = true;
-      dragStartX = e.clientX;
+      dragStart = { x: e.clientX, y: e.clientY };
       dragStartFrame = this.currentFrame;
       this.pause();
       scrubLayer.setPointerCapture(e.pointerId);
@@ -468,7 +469,7 @@ export class Player {
     });
     scrubLayer.addEventListener('pointermove', (e) => {
       if (!dragging) return;
-      const df = Math.round((e.clientX - dragStartX) / SCRUB_PX_PER_FRAME);
+      const df = Math.round(axisDelta(e, dragStart) / SCRUB_PX_PER_FRAME);
       const frame = clamp(dragStartFrame + df, 0, this.totalFrames - 1);
       this.seekToFrame(frame);
       scrubBadge.textContent = `frame ${frame}  ·  ${formatTime(this.frameToTime(frame))}`;
@@ -483,7 +484,7 @@ export class Player {
 
     // Click video toggles play only on quick tap without drag.
     scrubLayer.addEventListener('click', (e) => {
-      if (Math.abs(e.clientX - dragStartX) < 4) this.togglePlay();
+      if (Math.abs(axisDelta(e, dragStart)) < 4) this.togglePlay();
     });
 
     // Wheel steps frames.
@@ -498,9 +499,7 @@ export class Player {
     // Timeline click/drag to seek.
     let tlDown = false;
     const tlSeek = (e) => {
-      const rect = timeline.getBoundingClientRect();
-      const frac = clamp((e.clientX - rect.left) / rect.width, 0, 1);
-      this.seekToFrame(Math.round(frac * (this.totalFrames - 1)));
+      this.seekToFrame(Math.round(axisFraction(e, timeline) * (this.totalFrames - 1)));
     };
     timeline.addEventListener('pointerdown', (e) => {
       if (!this.loaded) return;

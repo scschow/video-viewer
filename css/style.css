@@ -346,6 +346,22 @@ body {
 .chk-label { font-size: 13px; color: var(--text-dim); display: inline-flex; align-items: center; gap: 6px; }
 .sync-status { font-size: 12px; color: var(--text-dim); margin-left: auto; font-variant-numeric: tabular-nums; }
 
+/* ---------- Forced landscape layout (body.rotated) ----------
+   Rotates the whole UI 90° clockwise so a portrait screen shows the
+   landscape layout. Used when the device can't or won't rotate
+   (e.g. iPhone Mirroring, rotation lock). Pointer math is remapped in
+   js/utils.js (axisDelta / axisFraction). */
+
+body.rotated {
+  width: 100vh;
+  width: 100dvh;
+  height: 100vw;
+  height: 100dvw;
+  transform: rotate(90deg) translateY(-100%);
+  transform-origin: top left;
+  padding: 0; /* safe-area insets don't apply to the rotated axes */
+}
+
 /* ---------- Rotate prompt (compare mode on portrait phones) ---------- */
 
 #rotate-overlay {
@@ -365,6 +381,8 @@ body {
 }
 .rotate-card h2 { font-size: 18px; margin: 14px 0 8px; }
 .rotate-card p { font-size: 13px; color: var(--text-dim); line-height: 1.5; margin: 0 0 18px; }
+.rotate-actions { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.rotate-actions .rotate-force { background: var(--accent); border-color: var(--accent); color: #fff; }
 .rotate-icon {
   font-size: 56px;
   display: inline-block;

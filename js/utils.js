@@ -1,5 +1,26 @@
 export const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
+// ---------- rotated-layout pointer mapping ----------
+// When body.rotated is set (landscape layout forced on a portrait screen via a
+// 90° CSS rotation), pointer events still arrive in screen coordinates: the
+// UI's horizontal axis runs down the physical screen.
+
+export const isRotatedLayout = () => document.body.classList.contains('rotated');
+
+/** Pointer movement along the UI's horizontal axis since `start` ({x, y}). */
+export function axisDelta(e, start) {
+  return isRotatedLayout() ? e.clientY - start.y : e.clientX - start.x;
+}
+
+/** Pointer position as a 0..1 fraction across an element's UI-horizontal axis. */
+export function axisFraction(e, el) {
+  const r = el.getBoundingClientRect();
+  const frac = isRotatedLayout()
+    ? (e.clientY - r.top) / r.height
+    : (e.clientX - r.left) / r.width;
+  return clamp(frac, 0, 1);
+}
+
 export function formatTime(seconds) {
   if (!isFinite(seconds)) return '0:00.00';
   const m = Math.floor(seconds / 60);

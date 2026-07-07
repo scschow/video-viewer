@@ -1,6 +1,6 @@
 import { Player, SPEEDS } from './player.js';
 import { SyncEngine } from './sync.js';
-import { clamp } from './utils.js';
+import { clamp, axisFraction } from './utils.js';
 import { APP_VERSION } from './version.js';
 
 // ---------------- players ----------------
@@ -62,7 +62,10 @@ let lockedByApp = false;
 let forceTouchForTesting = false;
 
 function needsLandscapePrompt() {
-  return mode === 'compare' && (coarseMq.matches || forceTouchForTesting) && portraitMq.matches;
+  return mode === 'compare'
+    && (coarseMq.matches || forceTouchForTesting)
+    && portraitMq.matches
+    && !document.body.classList.contains('rotated');
 }
 
 function updateRotateOverlay() {
@@ -84,15 +87,25 @@ async function enforceLandscape() {
 function releaseLandscape() {
   rotateDismissed = false;
   rotateOverlay.hidden = true;
+  document.body.classList.remove('rotated');
   if (!lockedByApp) return;
   lockedByApp = false;
   try { screen.orientation.unlock(); } catch { /* not supported */ }
   if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
 }
 
-portraitMq.addEventListener('change', updateRotateOverlay);
+portraitMq.addEventListener('change', () => {
+  // Once the device is physically landscape, the CSS rotation must not stack on top.
+  if (!portraitMq.matches) document.body.classList.remove('rotated');
+  updateRotateOverlay();
+});
 rotateOverlay.querySelector('.rotate-dismiss').addEventListener('click', () => {
   rotateDismissed = true;
+  updateRotateOverlay();
+});
+rotateOverlay.querySelector('.rotate-force').addEventListener('click', () => {
+  // Landscape layout on a portrait screen: rotate the whole UI 90° with CSS.
+  document.body.classList.add('rotated');
   updateRotateOverlay();
 });
 
@@ -136,8 +149,7 @@ syncSpeedGroup.addEventListener('click', (e) => {
 // Master timeline scrubbing.
 let syncTlDown = false;
 const syncTlSeek = (e) => {
-  const rect = syncTimeline.getBoundingClientRect();
-  sync.scrubToProgress((e.clientX - rect.left) / rect.width);
+  sync.scrubToProgress(axisFraction(e, syncTimeline));
 };
 syncTimeline.addEventListener('pointerdown', (e) => {
   if (!sync.ready || sync.mode === 'keyframe') return;
